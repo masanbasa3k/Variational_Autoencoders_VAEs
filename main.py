@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader
 import torchvision
 import matplotlib.pyplot as plt
 import numpy as np
-from VAE_model import VAE
 
 # Data Path and Transformations
 data_dir = 'Variational_Autoencoders_VAEs/data'  # Path to the 'data' folder
