@@ -6,13 +6,17 @@ import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import torchvision
+import matplotlib.pyplot as plt
+import numpy as np
+from VAE_model import VAE
 
 # Data Path and Transformations
 data_dir = 'Variational_Autoencoders_VAEs/data'  # Path to the 'data' folder
 transform = transforms.Compose([
     transforms.Resize((64, 64)),
+    transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.Normalize((0.5,), (0.5,))
 ])
 
 # Loading the Dataset
@@ -27,8 +31,6 @@ class_names = dataset.classes
 num_classes = len(class_names)
 
 # Visualizing the Data (an example batch)
-import matplotlib.pyplot as plt
-import numpy as np
 
 def imshow(image):
     image = image / 2 + 0.5
@@ -44,14 +46,13 @@ images, labels = dataiter.__next__()
 # imshow(torchvision.utils.make_grid(images))
 # print(' '.join(f'{class_names[labels[j]]:5s}' for j in range(batch_size)))
 
-# Defining the VAE Model
-
+# VAE Model
 class VAE(nn.Module):
     def __init__(self, input_dim, hidden_dim, latent_dim):
         super(VAE, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=2, padding=1),  # Change in_channels to 1 for grayscale
             nn.ReLU(),
             nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
@@ -70,11 +71,9 @@ class VAE(nn.Module):
             nn.Unflatten(1, (32, 16, 16)),
             nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(in_channels=16, out_channels=1, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.Sigmoid()
         )
-
-
 
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)
@@ -90,6 +89,7 @@ class VAE(nn.Module):
         logvar = self.fc_logvar(hidden)
 
         # Print the shapes of mu, logvar, and hidden for debugging
+
         # If you want to see the shapes, uncomment the lines below
         # print("mu shape:", mu.shape)
         # print("logvar shape:", logvar.shape)
@@ -104,7 +104,7 @@ class VAE(nn.Module):
 
 
 # Hyperparameters
-input_dim = (3, 64, 64)  # Input image dimensions (channels, height, width)
+input_dim = (1, 64, 64)  # Input image dimensions (channels, height, width)
 hidden_dim = 256
 latent_dim = 20
 
